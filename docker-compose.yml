@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  whitelist-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: whitelist-bot
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    volumes:
+      - whitelist-data:/app/data
+    environment:
+      # Discord Bot Credentials
+      - DISCORD_TOKEN=${DISCORD_TOKEN:-your_discord_bot_token_here}
+      - GUILD_ID=${GUILD_ID:-your_guild_id_here}
+      
+      # Discord Role & Channel Identifiers
+      - WHITELIST_CHANNEL_ID=${WHITELIST_CHANNEL_ID:-your_whitelist_channel_id_here}
+      - WHITELIST_ROLE_ID=${WHITELIST_ROLE_ID:-your_whitelist_role_id_here}
+      - DISCORD_CONSOLE_CHANNEL_ID=${DISCORD_CONSOLE_CHANNEL_ID:-your_console_channel_id_here}
+      - BYPASS_LIMITS_ROLE_ID=${BYPASS_LIMITS_ROLE_ID:-your_bypass_limits_role_id_here}
+      
+      # Gateway Web Configuration
+      - PORT=4000
+      - BASE_URL=${BASE_URL:-http://localhost:4000}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-changeme}
+      - DATABASE_PATH=/app/data/database.json
+
+volumes:
+  whitelist-data:
+    name: whitelist-bot-data
