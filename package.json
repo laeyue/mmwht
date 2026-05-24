@@ -1,0 +1,32 @@
+{
+  "name": "meowcraft-whitelist-bot",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node backend/index.js",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "discord.js": "^14.26.4",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "lucide-react": "^0.575.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-router-dom": "^7.15.1",
+    "tailwindcss": "^4.2.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.2.1",
+    "@types/node": "^22.16.5",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^5.0.4",
+    "typescript": "^5.8.3",
+    "vite": "^7.3.1"
+  }
+}
