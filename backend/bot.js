@@ -20,10 +20,14 @@ export async function initBot() {
 client.once(Events.ClientReady, async (c) => {
   console.log(`[Bot] Active! Logged in as ${c.user.tag}`);
 
-  const whitelistChannelId = process.env.WHITELIST_CHANNEL_ID;
-  if (whitelistChannelId) {
+  const whitelistChannelIds = (process.env.WHITELIST_CHANNEL_ID || "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
+
+  for (const channelId of whitelistChannelIds) {
     try {
-      const channel = await client.channels.fetch(whitelistChannelId);
+      const channel = await client.channels.fetch(channelId);
       if (channel && channel.isTextBased()) {
         // Retrieve last 10 messages to see if the whitelist button already exists
         const messages = await channel.messages.fetch({ limit: 10 });
@@ -60,13 +64,13 @@ client.once(Events.ClientReady, async (c) => {
             embeds: [welcomeEmbed],
             components: [row],
           });
-          console.log("[Bot] Posted new whitelist application embed.");
+          console.log(`[Bot] Posted new whitelist application embed to channel: ${channelId}`);
         } else {
-          console.log("[Bot] Whitelist registration button already exists. Skipping duplication.");
+          console.log(`[Bot] Whitelist registration button already exists in channel ${channelId}. Skipping duplication.`);
         }
       }
     } catch (err) {
-      console.error("[Bot] Failed to post button to whitelist channel:", err);
+      console.error(`[Bot] Failed to post button to whitelist channel ${channelId}:`, err);
     }
   }
 });
