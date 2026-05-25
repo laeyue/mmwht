@@ -88,7 +88,8 @@ export default function WhitelistPage() {
             alt="Meowcraft Logo"
             className="w-9 h-9 object-contain pixelated"
             onError={(e) => {
-              (e.target as HTMLImageElement).src = "https://cdn.discordapp.com/icons/1361877511624982659/a_0b904d9c7ad6e6ee.png"; // Fallback
+              e.currentTarget.onerror = null; // Prevent infinite fallback loops
+              e.currentTarget.src = "https://cdn.discordapp.com/icons/1361877511624982659/a_0b904d9c7ad6e6ee.png"; // Fallback
             }}
           />
           <span className="font-display text-sm tracking-widest text-white">MEOWCRAFT</span>
