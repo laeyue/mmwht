@@ -1,5 +1,9 @@
-import { Client, GatewayIntentBits, Partials, ActionRowBuilder, ButtonBuilder, ButtonStyle, Events, TextChannel, EmbedBuilder } from "discord.js";
+import { Client, GatewayIntentBits, Partials, ActionRowBuilder, ButtonBuilder, ButtonStyle, Events, TextChannel, EmbedBuilder, MessageFlags } from "discord.js";
 import crypto from "crypto";
+
+function isValidSnowflake(id) {
+  return typeof id === "string" && /^\d{17,20}$/.test(id);
+}
 import { preAuthTokens, pendingApplications } from "./state.js";
 import { readDb, writeDb } from "./database.js";
 
@@ -21,10 +25,19 @@ export async function initBot() {
 client.once(Events.ClientReady, async (c) => {
   console.log(`[Bot] Active! Logged in as ${c.user.tag}`);
 
-  const whitelistChannelIds = (process.env.WHITELIST_CHANNEL_ID || "")
+  const rawIds = (process.env.WHITELIST_CHANNEL_ID || "")
     .split(",")
     .map((id) => id.trim())
     .filter(Boolean);
+
+  const whitelistChannelIds = [];
+  for (const id of rawIds) {
+    if (isValidSnowflake(id)) {
+      whitelistChannelIds.push(id);
+    } else {
+      console.warn(`[Bot] Skipping invalid whitelist channel ID: "${id}"`);
+    }
+  }
 
   for (const channelId of whitelistChannelIds) {
     try {
@@ -91,9 +104,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
     if (!appRecord) {
       return interaction.reply({
         content: "⚠️ This application no longer exists in the queue (already processed or expired).",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
+
+    // Acknowledge interaction immediately to prevent 10062 Unknown Interaction
+    await interaction.deferUpdate();
 
     // Remove from pending queue
     pendingApplications.delete(appId);
@@ -143,7 +159,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       .setFooter({ text: `App ID: ${appId}` })
       .setTimestamp();
 
-    await interaction.update({ embeds: [resultEmbed], components: [] });
+    await interaction.editReply({ embeds: [resultEmbed], components: [] });
 
     // Run bot side-effects asynchronously
     if (isApprove) {
@@ -192,7 +208,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
   await interaction.reply({
     embeds: [sessionEmbed],
-    ephemeral: true,
+    flags: MessageFlags.Ephemeral,
   });
 });
 
@@ -204,7 +220,7 @@ export async function approveUser(discordId, username, edition) {
 
   // 1. Send console command to the DiscordSRV console channel
   const consoleChannelId = process.env.DISCORD_CONSOLE_CHANNEL_ID;
-  if (consoleChannelId) {
+  if (consoleChannelId && isValidSnowflake(consoleChannelId)) {
     try {
       const channel = await client.channels.fetch(consoleChannelId);
       if (channel instanceof TextChannel) {
@@ -223,16 +239,16 @@ export async function approveUser(discordId, username, edition) {
   const guildId = process.env.GUILD_ID;
   const roleId = dbConfig.whitelistRoleId || process.env.WHITELIST_ROLE_ID;
   const additionalRoleId = dbConfig.additionalRoleId || process.env.ADDITIONAL_ROLE_ID;
-  if (guildId) {
+  if (guildId && isValidSnowflake(guildId)) {
     try {
       const guild = await client.guilds.fetch(guildId);
       const member = await guild.members.fetch(discordId);
       if (member) {
-        if (roleId) {
+        if (roleId && isValidSnowflake(roleId)) {
           await member.roles.add(roleId);
           console.log(`[Bot] Successfully assigned role ${roleId} to user ${discordId}`);
         }
-        if (additionalRoleId) {
+        if (additionalRoleId && isValidSnowflake(additionalRoleId)) {
           await member.roles.add(additionalRoleId);
           console.log(`[Bot] Successfully assigned additional role ${additionalRoleId} to user ${discordId}`);
         }
@@ -290,7 +306,7 @@ export async function revokeUser(discordId, username, edition) {
 
   // 1. Send console command to the DiscordSRV console channel to remove
   const consoleChannelId = process.env.DISCORD_CONSOLE_CHANNEL_ID;
-  if (consoleChannelId) {
+  if (consoleChannelId && isValidSnowflake(consoleChannelId)) {
     try {
       const channel = await client.channels.fetch(consoleChannelId);
       if (channel instanceof TextChannel) {
@@ -309,16 +325,16 @@ export async function revokeUser(discordId, username, edition) {
   const guildId = process.env.GUILD_ID;
   const roleId = dbConfig.whitelistRoleId || process.env.WHITELIST_ROLE_ID;
   const additionalRoleId = dbConfig.additionalRoleId || process.env.ADDITIONAL_ROLE_ID;
-  if (guildId) {
+  if (guildId && isValidSnowflake(guildId)) {
     try {
       const guild = await client.guilds.fetch(guildId);
       const member = await guild.members.fetch(discordId).catch(() => null);
       if (member) {
-        if (roleId) {
+        if (roleId && isValidSnowflake(roleId)) {
           await member.roles.remove(roleId);
           console.log(`[Bot] Successfully removed role ${roleId} from user ${discordId}`);
         }
-        if (additionalRoleId) {
+        if (additionalRoleId && isValidSnowflake(additionalRoleId)) {
           await member.roles.remove(additionalRoleId);
           console.log(`[Bot] Successfully removed additional role ${additionalRoleId} from user ${discordId}`);
         }
@@ -354,14 +370,14 @@ export async function revokeUser(discordId, username, edition) {
 export async function notifyStaffChannel(appRecord) {
   const db = readDb();
   const staffChannelId = db.config?.staffChannelId || "";
-  if (!staffChannelId) return;
+  if (!staffChannelId || !isValidSnowflake(staffChannelId)) return;
 
   try {
     const channel = await client.channels.fetch(staffChannelId);
     if (!channel || !channel.isTextBased()) return;
 
     const staffPingRoleId = db.config?.staffPingRoleId || "";
-    const pingContent = staffPingRoleId ? `<@&${staffPingRoleId}>` : null;
+    const pingContent = staffPingRoleId && isValidSnowflake(staffPingRoleId) ? `<@&${staffPingRoleId}>` : null;
 
     const editionLabel = appRecord.edition === "bedrock" ? "Bedrock" : "Java";
     const editionColor = appRecord.edition === "bedrock" ? 0x3b82f6 : 0x58cc02;
@@ -406,6 +422,9 @@ export async function notifyStaffChannel(appRecord) {
 
 export async function deployWelcomeEmbed(channelId) {
   try {
+    if (!isValidSnowflake(channelId)) {
+      throw new Error("Specified channel ID is not a valid snowflake.");
+    }
     const channel = await client.channels.fetch(channelId);
     if (!channel || !channel.isTextBased()) {
       throw new Error("Specified channel is invalid or not text-based.");
