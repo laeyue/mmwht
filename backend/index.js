@@ -59,9 +59,9 @@ app.post("/api/register", (req, res) => {
   // Extract client IP address securely
   const ipAddress = (req.headers["x-forwarded-for"] || req.socket.remoteAddress || "").split(",")[0].replace("::ffff:", "").trim();
 
-  // Prevent double pending submissions from the same Discord account or IP
+  // Prevent double pending submissions from the same Discord account
   const isAlreadyPending = Array.from(pendingApplications.values()).some(
-    (app) => app.discordId === discordId || app.ipAddress === ipAddress
+    (app) => app.discordId === discordId
   );
   if (isAlreadyPending) {
     return res.status(400).json({ error: "You already have an active whitelist application pending in our staff queue." });
