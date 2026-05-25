@@ -116,6 +116,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
   // Save to preAuthTokens memory
   preAuthTokens.set(token, {
     discordId,
+    discordUsername: interaction.user.tag,
     createdAt: Date.now(),
   });
 
@@ -170,13 +171,20 @@ export async function approveUser(discordId, username, edition) {
   // 2. Assign the whitelist role in the guild
   const guildId = process.env.GUILD_ID;
   const roleId = process.env.WHITELIST_ROLE_ID;
-  if (guildId && roleId) {
+  const additionalRoleId = process.env.ADDITIONAL_ROLE_ID;
+  if (guildId) {
     try {
       const guild = await client.guilds.fetch(guildId);
       const member = await guild.members.fetch(discordId);
       if (member) {
-        await member.roles.add(roleId);
-        console.log(`[Bot] Successfully assigned role ${roleId} to user ${discordId}`);
+        if (roleId) {
+          await member.roles.add(roleId);
+          console.log(`[Bot] Successfully assigned role ${roleId} to user ${discordId}`);
+        }
+        if (additionalRoleId) {
+          await member.roles.add(additionalRoleId);
+          console.log(`[Bot] Successfully assigned additional role ${additionalRoleId} to user ${discordId}`);
+        }
       }
     } catch (err) {
       console.error(`[Bot] Error assigning roles to member ${discordId}:`, err);
@@ -239,13 +247,20 @@ export async function revokeUser(discordId, username, edition) {
   // 2. Remove the whitelist role in the guild
   const guildId = process.env.GUILD_ID;
   const roleId = process.env.WHITELIST_ROLE_ID;
-  if (guildId && roleId) {
+  const additionalRoleId = process.env.ADDITIONAL_ROLE_ID;
+  if (guildId) {
     try {
       const guild = await client.guilds.fetch(guildId);
       const member = await guild.members.fetch(discordId).catch(() => null);
       if (member) {
-        await member.roles.remove(roleId);
-        console.log(`[Bot] Successfully removed role ${roleId} from user ${discordId}`);
+        if (roleId) {
+          await member.roles.remove(roleId);
+          console.log(`[Bot] Successfully removed role ${roleId} from user ${discordId}`);
+        }
+        if (additionalRoleId) {
+          await member.roles.remove(additionalRoleId);
+          console.log(`[Bot] Successfully removed additional role ${additionalRoleId} from user ${discordId}`);
+        }
       }
     } catch (err) {
       console.error(`[Bot] Error removing roles from member ${discordId}:`, err);

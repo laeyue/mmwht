@@ -5,6 +5,7 @@ type Application = {
   id: string;
   username: string;
   discordId: string;
+  discordUsername?: string;
   edition: "java" | "bedrock";
   submittedAt: string;
   ipAddress?: string;
@@ -13,6 +14,7 @@ type Application = {
 type DecisionLog = {
   username: string;
   discordId: string;
+  discordUsername?: string;
   edition: "java" | "bedrock";
   action: "approve" | "reject";
   processedAt: string;
@@ -23,6 +25,7 @@ type WhitelistedPlayer = {
   id: string;
   username: string;
   discordId: string;
+  discordUsername?: string;
   edition: "java" | "bedrock";
   whitelistedAt: string;
   ipAddress?: string;
@@ -400,7 +403,10 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                       </td>
                       <td className="p-4">
                         <div className="flex flex-col">
-                          <span className="text-xs font-mono text-gray-300">{app.discordId}</span>
+                          <span className="text-xs font-semibold text-white">
+                            {app.discordUsername || "Unknown"}
+                          </span>
+                          <span className="text-[10px] font-mono text-gray-400 mt-0.5">{app.discordId}</span>
                           {app.ipAddress && (
                             <span className="text-[10px] text-gray-500 font-mono mt-0.5" title="Submitting client IP">
                               IP: {app.ipAddress}
@@ -489,7 +495,10 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                       </td>
                       <td className="p-4">
                         <div className="flex flex-col">
-                          <span className="text-gray-300 font-mono">{player.discordId}</span>
+                          <span className="text-xs font-semibold text-white">
+                            {player.discordUsername || "Unknown"}
+                          </span>
+                          <span className="text-[10px] font-mono text-gray-400 mt-0.5">{player.discordId}</span>
                           {player.ipAddress && (
                             <span className="text-[10px] text-gray-500 font-mono mt-0.5" title="Registration client IP">
                               IP: {player.ipAddress}
@@ -560,7 +569,10 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                       </td>
                       <td className="p-4">
                         <div className="flex flex-col">
-                          <span className="text-gray-400 font-mono">{log.discordId}</span>
+                          <span className="text-xs font-semibold text-white">
+                            {log.discordUsername || "Unknown"}
+                          </span>
+                          <span className="text-[10px] font-mono text-gray-400 mt-0.5">{log.discordId}</span>
                           {log.ipAddress && (
                             <span className="text-[10px] text-gray-500 font-mono mt-0.5" title="Submitting client IP">
                               IP: {log.ipAddress}

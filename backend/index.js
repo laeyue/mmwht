@@ -54,6 +54,8 @@ app.post("/api/register", (req, res) => {
     return res.status(403).json({ error: "Invalid or expired verification session token." });
   }
 
+  const discordUsername = authRecord.discordUsername || "Unknown";
+
   // Extract client IP address securely
   const ipAddress = (req.headers["x-forwarded-for"] || req.socket.remoteAddress || "").split(",")[0].replace("::ffff:", "").trim();
 
@@ -91,6 +93,7 @@ app.post("/api/register", (req, res) => {
     id: appId,
     username: username.trim(),
     discordId,
+    discordUsername,
     edition,
     submittedAt: new Date().toISOString(),
     ipAddress
@@ -186,6 +189,7 @@ app.post("/api/admin/action", requireAdmin, async (req, res) => {
       id: `wl_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
       username: appRecord.username,
       discordId: appRecord.discordId,
+      discordUsername: appRecord.discordUsername || "Unknown",
       edition: appRecord.edition,
       ipAddress: appRecord.ipAddress || "Unknown",
       whitelistedAt: new Date().toISOString()
@@ -206,6 +210,7 @@ app.post("/api/admin/action", requireAdmin, async (req, res) => {
   db.logs.push({
     username: appRecord.username,
     discordId: appRecord.discordId,
+    discordUsername: appRecord.discordUsername || "Unknown",
     edition: appRecord.edition,
     action,
     processedAt: new Date().toISOString(),
@@ -248,6 +253,7 @@ app.post("/api/admin/revoke", requireAdmin, async (req, res) => {
   db.logs.push({
     username: removedRecord.username,
     discordId: removedRecord.discordId,
+    discordUsername: removedRecord.discordUsername || "Unknown",
     edition: removedRecord.edition,
     action: "revoke",
     processedAt: new Date().toISOString(),
