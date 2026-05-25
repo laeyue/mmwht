@@ -124,7 +124,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
     preAuthTokens.delete(token);
   }, 30 * 60 * 1000);
 
-  const baseUrl = process.env.BASE_URL || "http://localhost:4000";
+  let baseUrl = process.env.BASE_URL || "http://localhost:4000";
+  if (!baseUrl.startsWith("http://") && !baseUrl.startsWith("https://")) {
+    baseUrl = `https://${baseUrl}`;
+  }
   const registerUrl = `${baseUrl}/?discord=${discordId}&token=${token}`;
 
   const sessionEmbed = new EmbedBuilder()
