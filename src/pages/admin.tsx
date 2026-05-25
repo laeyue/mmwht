@@ -157,10 +157,14 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
 
   const filteredWhitelisted = useMemo(() => {
     if (!whitelisted) return [];
+    const term = searchTerm.toLowerCase().trim();
+    if (!term) return whitelisted;
     return whitelisted.filter(
       (player) =>
-        player.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        player.discordId.includes(searchTerm)
+        player.username.toLowerCase().includes(term) ||
+        player.discordId.includes(term) ||
+        (player.discordUsername || "").toLowerCase().includes(term) ||
+        (player.ipAddress || "").includes(term)
     );
   }, [whitelisted, searchTerm]);
 
@@ -653,7 +657,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
             {/* Search Input */}
             <input
               type="text"
-              placeholder="Search username or Discord..."
+              placeholder="Search username, Discord, or IP..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="bg-black/35 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white max-w-xs focus:outline-none focus:border-emerald-500/40"
