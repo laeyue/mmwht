@@ -158,7 +158,8 @@ app.get("/api/admin/queue", requireAdmin, (req, res) => {
       totalWhitelisted: db.whitelisted.length
     },
     whitelisted: db.whitelisted,
-    logs: (db.logs || []).slice().reverse()
+    logs: (db.logs || []).slice().reverse(),
+    config: db.config || { whitelistRoleId: "", additionalRoleId: "" }
   });
 });
 
@@ -292,6 +293,21 @@ app.post("/api/admin/deploy-button", requireAdmin, async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message || "Failed to deploy welcome embed to channel." });
   }
+});
+
+// Update Discord Role Configuration in database
+app.post("/api/admin/config", requireAdmin, (req, res) => {
+  const { whitelistRoleId, additionalRoleId } = req.body;
+
+  const db = readDb();
+  if (!db.config) {
+    db.config = { whitelistRoleId: "", additionalRoleId: "" };
+  }
+  db.config.whitelistRoleId = (whitelistRoleId || "").trim();
+  db.config.additionalRoleId = (additionalRoleId || "").trim();
+
+  writeDb(db);
+  res.json({ ok: true });
 });
 
 // Fallback all other client routing to SPA entry

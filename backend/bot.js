@@ -1,6 +1,7 @@
 import { Client, GatewayIntentBits, Partials, ActionRowBuilder, ButtonBuilder, ButtonStyle, Events, TextChannel, EmbedBuilder } from "discord.js";
 import crypto from "crypto";
 import { preAuthTokens } from "./state.js";
+import { readDb } from "./database.js";
 
 export const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
@@ -173,9 +174,11 @@ export async function approveUser(discordId, username, edition) {
   }
 
   // 2. Assign the whitelist role in the guild
+  const db = readDb();
+  const dbConfig = db.config || {};
   const guildId = process.env.GUILD_ID;
-  const roleId = process.env.WHITELIST_ROLE_ID;
-  const additionalRoleId = process.env.ADDITIONAL_ROLE_ID;
+  const roleId = dbConfig.whitelistRoleId || process.env.WHITELIST_ROLE_ID;
+  const additionalRoleId = dbConfig.additionalRoleId || process.env.ADDITIONAL_ROLE_ID;
   if (guildId) {
     try {
       const guild = await client.guilds.fetch(guildId);
@@ -249,9 +252,11 @@ export async function revokeUser(discordId, username, edition) {
   }
 
   // 2. Remove the whitelist role in the guild
+  const db = readDb();
+  const dbConfig = db.config || {};
   const guildId = process.env.GUILD_ID;
-  const roleId = process.env.WHITELIST_ROLE_ID;
-  const additionalRoleId = process.env.ADDITIONAL_ROLE_ID;
+  const roleId = dbConfig.whitelistRoleId || process.env.WHITELIST_ROLE_ID;
+  const additionalRoleId = dbConfig.additionalRoleId || process.env.ADDITIONAL_ROLE_ID;
   if (guildId) {
     try {
       const guild = await client.guilds.fetch(guildId);

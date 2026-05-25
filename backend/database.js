@@ -12,7 +12,11 @@ const defaultData = {
     approvedCount: 0,
     rejectedCount: 0
   },
-  logs: []
+  logs: [],
+  config: {
+    whitelistRoleId: "",
+    additionalRoleId: ""
+  }
 };
 
 export function readDb() {
@@ -25,6 +29,9 @@ export function readDb() {
     const data = JSON.parse(raw);
     if (!data.logs) {
       data.logs = [];
+    }
+    if (!data.config) {
+      data.config = { whitelistRoleId: "", additionalRoleId: "" };
     }
     return data;
   } catch (err) {

@@ -184,6 +184,10 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
       setStats(data.stats);
       setLogs(data.logs);
       setWhitelisted(data.whitelisted);
+      if (data.config) {
+        setWhitelistRoleId(data.config.whitelistRoleId || "");
+        setAdditionalRoleId(data.config.additionalRoleId || "");
+      }
     } catch (err: any) {
       setError(err.message || "Failed to load whitelist queue.");
       if (err.message?.includes("expired")) {
@@ -228,6 +232,42 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
       setDeployError("Failed to connect to the server.");
     } finally {
       setDeploying(false);
+    }
+  }
+
+  const [whitelistRoleId, setWhitelistRoleId] = useState("");
+  const [additionalRoleId, setAdditionalRoleId] = useState("");
+  const [savingRoles, setSavingRoles] = useState(false);
+  const [saveRolesSuccess, setSaveRolesSuccess] = useState(false);
+  const [saveRolesError, setSaveRolesError] = useState<string | null>(null);
+
+  async function handleSaveRoles(e: React.FormEvent) {
+    e.preventDefault();
+    setSavingRoles(true);
+    setSaveRolesSuccess(false);
+    setSaveRolesError(null);
+
+    try {
+      const res = await fetch("/api/admin/config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          whitelistRoleId: whitelistRoleId.trim(),
+          additionalRoleId: additionalRoleId.trim(),
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.ok) {
+        setSaveRolesSuccess(true);
+        setTimeout(() => setSaveRolesSuccess(false), 5000);
+      } else {
+        setSaveRolesError(data.error || "Failed to update role settings.");
+      }
+    } catch {
+      setSaveRolesError("Failed to connect to the server.");
+    } finally {
+      setSavingRoles(false);
     }
   }
 
@@ -409,6 +449,74 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
               ❌ {deployError}
             </div>
           )}
+        </div>
+
+        {/* Role Config Manager */}
+        <div className="modern-card p-6 flex flex-col gap-4 animate-fade-in-up">
+          <div>
+            <h3 className="text-xs font-bold text-white uppercase tracking-widest border-b border-white/5 pb-3 flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              Guild Role Configuration
+            </h3>
+            <p className="text-[10px] text-gray-400 mt-2 leading-relaxed">
+              Define the Discord role IDs that are dynamically granted or revoked when whitelist requests are approved. 
+              These settings override environment variables and take effect instantly.
+            </p>
+          </div>
+
+          <form onSubmit={handleSaveRoles} className="flex flex-col gap-4">
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="flex flex-col gap-2">
+                <label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
+                  Primary Whitelist Role ID
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter Whitelist Role ID..."
+                  value={whitelistRoleId}
+                  onChange={(e) => setWhitelistRoleId(e.target.value.replace(/\s/g, ""))}
+                  className="bg-black/35 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500/40"
+                  disabled={savingRoles}
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
+                  Additional Role ID (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter Additional Role ID..."
+                  value={additionalRoleId}
+                  onChange={(e) => setAdditionalRoleId(e.target.value.replace(/\s/g, ""))}
+                  className="bg-black/35 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500/40"
+                  disabled={savingRoles}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-4 mt-2">
+              <button
+                type="submit"
+                disabled={savingRoles}
+                className="modern-pill bg-emerald-500/10 border-emerald-500/25 text-emerald-400 hover:bg-emerald-500 hover:text-white px-5 py-2 text-xs uppercase font-bold active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+              >
+                {savingRoles ? "Saving..." : "Save Role Settings"}
+              </button>
+
+              {saveRolesSuccess && (
+                <span className="text-[10px] text-emerald-400 font-bold animate-fade-in">
+                  ✓ Roles updated and saved!
+                </span>
+              )}
+
+              {saveRolesError && (
+                <span className="text-[10px] text-red-400 font-bold animate-fade-in">
+                  Error: {saveRolesError}
+                </span>
+              )}
+            </div>
+          </form>
         </div>
 
         {/* Main queue card */}
