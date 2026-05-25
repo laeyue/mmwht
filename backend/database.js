@@ -17,7 +17,8 @@ const defaultData = {
     whitelistRoleId: "",
     additionalRoleId: "",
     bypassRoleId: "",
-    staffChannelId: ""
+    staffChannelId: "",
+    staffPingRoleId: ""
   }
 };
 
@@ -37,6 +38,7 @@ export function readDb() {
     } else {
       if (!data.config.hasOwnProperty("bypassRoleId")) data.config.bypassRoleId = "";
       if (!data.config.hasOwnProperty("staffChannelId")) data.config.staffChannelId = "";
+      if (!data.config.hasOwnProperty("staffPingRoleId")) data.config.staffPingRoleId = "";
     }
     return data;
   } catch (err) {

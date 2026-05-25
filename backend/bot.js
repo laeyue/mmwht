@@ -360,6 +360,9 @@ export async function notifyStaffChannel(appRecord) {
     const channel = await client.channels.fetch(staffChannelId);
     if (!channel || !channel.isTextBased()) return;
 
+    const staffPingRoleId = db.config?.staffPingRoleId || "";
+    const pingContent = staffPingRoleId ? `<@&${staffPingRoleId}>` : null;
+
     const editionLabel = appRecord.edition === "bedrock" ? "Bedrock" : "Java";
     const editionColor = appRecord.edition === "bedrock" ? 0x3b82f6 : 0x58cc02;
 
@@ -389,12 +392,17 @@ export async function notifyStaffChannel(appRecord) {
         .setEmoji("❌")
     );
 
-    await channel.send({ embeds: [reviewEmbed], components: [row] });
+    await channel.send({
+      ...(pingContent ? { content: pingContent } : {}),
+      embeds: [reviewEmbed],
+      components: [row],
+    });
     console.log(`[Bot] Staff review embed sent for application ${appRecord.id}`);
   } catch (err) {
     console.error("[Bot] Failed to send staff review embed:", err);
   }
 }
+
 
 export async function deployWelcomeEmbed(channelId) {
   try {
