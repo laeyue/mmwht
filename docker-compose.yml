@@ -19,6 +19,7 @@ services:
       # Discord Role & Channel Identifiers
       - WHITELIST_CHANNEL_ID=${WHITELIST_CHANNEL_ID:-your_whitelist_channel_id_here}
       - WHITELIST_ROLE_ID=${WHITELIST_ROLE_ID:-your_whitelist_role_id_here}
+      - ADDITIONAL_ROLE_ID=${ADDITIONAL_ROLE_ID:-}
       - DISCORD_CONSOLE_CHANNEL_ID=${DISCORD_CONSOLE_CHANNEL_ID:-your_console_channel_id_here}
       - BYPASS_LIMITS_ROLE_ID=${BYPASS_LIMITS_ROLE_ID:-your_bypass_limits_role_id_here}
       
