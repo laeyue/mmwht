@@ -159,7 +159,7 @@ app.get("/api/admin/queue", requireAdmin, (req, res) => {
     },
     whitelisted: db.whitelisted,
     logs: (db.logs || []).slice().reverse(),
-    config: db.config || { whitelistRoleId: "", additionalRoleId: "" }
+    config: db.config || { whitelistRoleId: "", additionalRoleId: "", bypassRoleId: "" }
   });
 });
 
@@ -297,14 +297,15 @@ app.post("/api/admin/deploy-button", requireAdmin, async (req, res) => {
 
 // Update Discord Role Configuration in database
 app.post("/api/admin/config", requireAdmin, (req, res) => {
-  const { whitelistRoleId, additionalRoleId } = req.body;
+  const { whitelistRoleId, additionalRoleId, bypassRoleId } = req.body;
 
   const db = readDb();
   if (!db.config) {
-    db.config = { whitelistRoleId: "", additionalRoleId: "" };
+    db.config = { whitelistRoleId: "", additionalRoleId: "", bypassRoleId: "" };
   }
   db.config.whitelistRoleId = (whitelistRoleId || "").trim();
   db.config.additionalRoleId = (additionalRoleId || "").trim();
+  db.config.bypassRoleId = (bypassRoleId || "").trim();
 
   writeDb(db);
   res.json({ ok: true });

@@ -187,6 +187,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
       if (data.config) {
         setWhitelistRoleId(data.config.whitelistRoleId || "");
         setAdditionalRoleId(data.config.additionalRoleId || "");
+        setBypassRoleId(data.config.bypassRoleId || "");
       }
     } catch (err: any) {
       setError(err.message || "Failed to load whitelist queue.");
@@ -237,6 +238,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
 
   const [whitelistRoleId, setWhitelistRoleId] = useState("");
   const [additionalRoleId, setAdditionalRoleId] = useState("");
+  const [bypassRoleId, setBypassRoleId] = useState("");
   const [savingRoles, setSavingRoles] = useState(false);
   const [saveRolesSuccess, setSaveRolesSuccess] = useState(false);
   const [saveRolesError, setSaveRolesError] = useState<string | null>(null);
@@ -254,6 +256,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
         body: JSON.stringify({
           whitelistRoleId: whitelistRoleId.trim(),
           additionalRoleId: additionalRoleId.trim(),
+          bypassRoleId: bypassRoleId.trim(),
         }),
       });
 
@@ -465,7 +468,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
           </div>
 
           <form onSubmit={handleSaveRoles} className="flex flex-col gap-4">
-            <div className="grid sm:grid-cols-2 gap-4">
+            <div className="grid sm:grid-cols-3 gap-4">
               <div className="flex flex-col gap-2">
                 <label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
                   Primary Whitelist Role ID
@@ -489,6 +492,20 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                   placeholder="Enter Additional Role ID..."
                   value={additionalRoleId}
                   onChange={(e) => setAdditionalRoleId(e.target.value.replace(/\s/g, ""))}
+                  className="bg-black/35 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500/40"
+                  disabled={savingRoles}
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
+                  Bypass Limits Role ID (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter Bypass Role ID..."
+                  value={bypassRoleId}
+                  onChange={(e) => setBypassRoleId(e.target.value.replace(/\s/g, ""))}
                   className="bg-black/35 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500/40"
                   disabled={savingRoles}
                 />

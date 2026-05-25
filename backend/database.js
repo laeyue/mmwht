@@ -15,7 +15,8 @@ const defaultData = {
   logs: [],
   config: {
     whitelistRoleId: "",
-    additionalRoleId: ""
+    additionalRoleId: "",
+    bypassRoleId: ""
   }
 };
 
@@ -31,7 +32,9 @@ export function readDb() {
       data.logs = [];
     }
     if (!data.config) {
-      data.config = { whitelistRoleId: "", additionalRoleId: "" };
+      data.config = { whitelistRoleId: "", additionalRoleId: "", bypassRoleId: "" };
+    } else if (data.config && !data.config.hasOwnProperty("bypassRoleId")) {
+      data.config.bypassRoleId = "";
     }
     return data;
   } catch (err) {

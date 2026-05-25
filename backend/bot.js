@@ -87,8 +87,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
     try {
       const member = await interaction.guild.members.fetch(discordId).catch(() => null);
       if (member) {
-        const whitelistRoleId = process.env.WHITELIST_ROLE_ID;
-        const bypassRoleId = process.env.BYPASS_LIMITS_ROLE_ID;
+        const db = readDb();
+        const dbConfig = db.config || {};
+        const whitelistRoleId = dbConfig.whitelistRoleId || process.env.WHITELIST_ROLE_ID;
+        const bypassRoleId = dbConfig.bypassRoleId || process.env.BYPASS_LIMITS_ROLE_ID;
 
         const hasWhitelistRole = whitelistRoleId ? member.roles.cache.has(whitelistRoleId) : false;
         const hasBypassRole = bypassRoleId ? member.roles.cache.has(bypassRoleId) : false;
