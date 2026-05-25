@@ -1,7 +1,7 @@
 import { Client, GatewayIntentBits, Partials, ActionRowBuilder, ButtonBuilder, ButtonStyle, Events, TextChannel, EmbedBuilder } from "discord.js";
 import crypto from "crypto";
-import { preAuthTokens } from "./state.js";
-import { readDb } from "./database.js";
+import { preAuthTokens, pendingApplications } from "./state.js";
+import { readDb, writeDb } from "./database.js";
 
 export const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
@@ -78,7 +78,84 @@ client.once(Events.ClientReady, async (c) => {
 
 // Button Interaction Handler
 client.on(Events.InteractionCreate, async (interaction) => {
-  if (!interaction.isButton() || interaction.customId !== "apply_whitelist") return;
+  if (!interaction.isButton()) return;
+
+  const customId = interaction.customId;
+
+  // ── Staff quick-review buttons ──────────────────────────────────────────
+  if (customId.startsWith("approve_wl_") || customId.startsWith("reject_wl_")) {
+    const isApprove = customId.startsWith("approve_wl_");
+    const appId = customId.replace(isApprove ? "approve_wl_" : "reject_wl_", "");
+
+    const appRecord = pendingApplications.get(appId);
+    if (!appRecord) {
+      return interaction.reply({
+        content: "⚠️ This application no longer exists in the queue (already processed or expired).",
+        ephemeral: true,
+      });
+    }
+
+    // Remove from pending queue
+    pendingApplications.delete(appId);
+
+    const db = readDb();
+    if (isApprove) {
+      db.stats.approvedCount++;
+      db.whitelisted.push({
+        id: `wl_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+        username: appRecord.username,
+        discordId: appRecord.discordId,
+        discordUsername: appRecord.discordUsername || "Unknown",
+        edition: appRecord.edition,
+        ipAddress: appRecord.ipAddress || "Unknown",
+        whitelistedAt: new Date().toISOString(),
+      });
+    } else {
+      db.stats.rejectedCount++;
+    }
+
+    if (!db.logs) db.logs = [];
+    db.logs.push({
+      username: appRecord.username,
+      discordId: appRecord.discordId,
+      discordUsername: appRecord.discordUsername || "Unknown",
+      edition: appRecord.edition,
+      action: isApprove ? "approve" : "reject",
+      processedAt: new Date().toISOString(),
+      ipAddress: appRecord.ipAddress,
+    });
+    if (db.logs.length > 50) db.logs.shift();
+    writeDb(db);
+
+    // Update the staff embed to show result
+    const staffId = interaction.user.id;
+    const staffTag = interaction.user.tag;
+    const resultEmbed = new EmbedBuilder()
+      .setColor(isApprove ? 0x58cc02 : 0xff3b30)
+      .setTitle(isApprove ? "✅ Application Approved" : "❌ Application Rejected")
+      .addFields(
+        { name: "Minecraft Username", value: `\`${appRecord.username}\``, inline: true },
+        { name: "Platform", value: appRecord.edition === "bedrock" ? "Bedrock" : "Java", inline: true },
+        { name: "Discord", value: `<@${appRecord.discordId}> (${appRecord.discordUsername || "Unknown"})`, inline: false },
+        { name: "Reviewed By", value: `<@${staffId}> (${staffTag})`, inline: true },
+        { name: "Reviewed At", value: `<t:${Math.floor(Date.now() / 1000)}:f>`, inline: true },
+      )
+      .setFooter({ text: `App ID: ${appId}` })
+      .setTimestamp();
+
+    await interaction.update({ embeds: [resultEmbed], components: [] });
+
+    // Run bot side-effects asynchronously
+    if (isApprove) {
+      approveUser(appRecord.discordId, appRecord.username, appRecord.edition).catch((err) =>
+        console.error(`[Bot] Error during Discord approval for ${appRecord.username}:`, err)
+      );
+    }
+    return;
+  }
+
+  // ── Apply whitelist button ───────────────────────────────────────────────
+  if (customId !== "apply_whitelist") return;
 
   const discordId = interaction.user.id;
 
@@ -273,7 +350,52 @@ export async function revokeUser(discordId, username, edition) {
   }
 }
 
-// Deploy Welcome Button Embed Dynamically
+// Notify Staff Channel with new pending application
+export async function notifyStaffChannel(appRecord) {
+  const db = readDb();
+  const staffChannelId = db.config?.staffChannelId || "";
+  if (!staffChannelId) return;
+
+  try {
+    const channel = await client.channels.fetch(staffChannelId);
+    if (!channel || !channel.isTextBased()) return;
+
+    const editionLabel = appRecord.edition === "bedrock" ? "Bedrock" : "Java";
+    const editionColor = appRecord.edition === "bedrock" ? 0x3b82f6 : 0x58cc02;
+
+    const reviewEmbed = new EmbedBuilder()
+      .setColor(editionColor)
+      .setTitle("📋 New Whitelist Application")
+      .addFields(
+        { name: "Minecraft Username", value: `\`${appRecord.username}\``, inline: true },
+        { name: "Platform", value: editionLabel, inline: true },
+        { name: "Discord", value: `<@${appRecord.discordId}> (${appRecord.discordUsername || "Unknown"})`, inline: false },
+        { name: "Submitted", value: `<t:${Math.floor(new Date(appRecord.submittedAt).getTime() / 1000)}:R>`, inline: true },
+        { name: "IP Address", value: `\`${appRecord.ipAddress || "Unknown"}\``, inline: true },
+      )
+      .setFooter({ text: `App ID: ${appRecord.id}` })
+      .setTimestamp();
+
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`approve_wl_${appRecord.id}`)
+        .setLabel("Approve")
+        .setStyle(ButtonStyle.Success)
+        .setEmoji("✅"),
+      new ButtonBuilder()
+        .setCustomId(`reject_wl_${appRecord.id}`)
+        .setLabel("Reject")
+        .setStyle(ButtonStyle.Danger)
+        .setEmoji("❌")
+    );
+
+    await channel.send({ embeds: [reviewEmbed], components: [row] });
+    console.log(`[Bot] Staff review embed sent for application ${appRecord.id}`);
+  } catch (err) {
+    console.error("[Bot] Failed to send staff review embed:", err);
+  }
+}
+
 export async function deployWelcomeEmbed(channelId) {
   try {
     const channel = await client.channels.fetch(channelId);

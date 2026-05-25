@@ -16,7 +16,8 @@ const defaultData = {
   config: {
     whitelistRoleId: "",
     additionalRoleId: "",
-    bypassRoleId: ""
+    bypassRoleId: "",
+    staffChannelId: ""
   }
 };
 
@@ -32,9 +33,10 @@ export function readDb() {
       data.logs = [];
     }
     if (!data.config) {
-      data.config = { whitelistRoleId: "", additionalRoleId: "", bypassRoleId: "" };
-    } else if (data.config && !data.config.hasOwnProperty("bypassRoleId")) {
-      data.config.bypassRoleId = "";
+      data.config = { whitelistRoleId: "", additionalRoleId: "", bypassRoleId: "", staffChannelId: "" };
+    } else {
+      if (!data.config.hasOwnProperty("bypassRoleId")) data.config.bypassRoleId = "";
+      if (!data.config.hasOwnProperty("staffChannelId")) data.config.staffChannelId = "";
     }
     return data;
   } catch (err) {

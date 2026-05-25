@@ -192,6 +192,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
         setWhitelistRoleId(data.config.whitelistRoleId || "");
         setAdditionalRoleId(data.config.additionalRoleId || "");
         setBypassRoleId(data.config.bypassRoleId || "");
+        setStaffChannelId(data.config.staffChannelId || "");
       }
     } catch (err: any) {
       setError(err.message || "Failed to load whitelist queue.");
@@ -243,6 +244,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
   const [whitelistRoleId, setWhitelistRoleId] = useState("");
   const [additionalRoleId, setAdditionalRoleId] = useState("");
   const [bypassRoleId, setBypassRoleId] = useState("");
+  const [staffChannelId, setStaffChannelId] = useState("");
   const [savingRoles, setSavingRoles] = useState(false);
   const [saveRolesSuccess, setSaveRolesSuccess] = useState(false);
   const [saveRolesError, setSaveRolesError] = useState<string | null>(null);
@@ -261,6 +263,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
           whitelistRoleId: whitelistRoleId.trim(),
           additionalRoleId: additionalRoleId.trim(),
           bypassRoleId: bypassRoleId.trim(),
+          staffChannelId: staffChannelId.trim(),
         }),
       });
 
@@ -514,6 +517,24 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                   disabled={savingRoles}
                 />
               </div>
+            </div>
+
+            {/* Staff Review Channel — spans full width below the 3-col grid */}
+            <div className="flex flex-col gap-2">
+              <label className="text-[9px] font-bold text-amber-400 uppercase tracking-widest">
+                Staff Review Channel ID
+              </label>
+              <input
+                type="text"
+                placeholder="Enter Staff Review Channel ID... (bot will post Approve / Reject buttons here)"
+                value={staffChannelId}
+                onChange={(e) => setStaffChannelId(e.target.value.replace(/\s/g, ""))}
+                className="bg-black/35 border border-amber-500/20 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500/50"
+                disabled={savingRoles}
+              />
+              <p className="text-[9px] text-gray-500 leading-relaxed">
+                When set, the bot will automatically post an embed with <strong className="text-amber-400">Approve</strong> and <strong className="text-red-400">Reject</strong> buttons to this channel every time a new application is submitted.
+              </p>
             </div>
 
             <div className="flex items-center justify-between gap-4 mt-2">

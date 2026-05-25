@@ -8,7 +8,7 @@ import crypto from "crypto";
 let activeAdminSession = null;
 
 import { pendingApplications, preAuthTokens } from "./state.js";
-import { initBot, approveUser, revokeUser, deployWelcomeEmbed } from "./bot.js";
+import { initBot, approveUser, revokeUser, deployWelcomeEmbed, notifyStaffChannel } from "./bot.js";
 import { readDb, writeDb } from "./database.js";
 
 // Load configuration
@@ -102,6 +102,11 @@ app.post("/api/register", (req, res) => {
   // Consume token
   preAuthTokens.delete(token);
 
+  // Notify staff channel with new application embed
+  notifyStaffChannel(pendingApplications.get(appId)).catch((err) =>
+    console.error("[Server] Failed to notify staff channel:", err)
+  );
+
   res.json({ ok: true });
 });
 
@@ -159,7 +164,7 @@ app.get("/api/admin/queue", requireAdmin, (req, res) => {
     },
     whitelisted: db.whitelisted,
     logs: (db.logs || []).slice().reverse(),
-    config: db.config || { whitelistRoleId: "", additionalRoleId: "", bypassRoleId: "" }
+    config: db.config || { whitelistRoleId: "", additionalRoleId: "", bypassRoleId: "", staffChannelId: "" }
   });
 });
 
@@ -297,15 +302,16 @@ app.post("/api/admin/deploy-button", requireAdmin, async (req, res) => {
 
 // Update Discord Role Configuration in database
 app.post("/api/admin/config", requireAdmin, (req, res) => {
-  const { whitelistRoleId, additionalRoleId, bypassRoleId } = req.body;
+  const { whitelistRoleId, additionalRoleId, bypassRoleId, staffChannelId } = req.body;
 
   const db = readDb();
   if (!db.config) {
-    db.config = { whitelistRoleId: "", additionalRoleId: "", bypassRoleId: "" };
+    db.config = { whitelistRoleId: "", additionalRoleId: "", bypassRoleId: "", staffChannelId: "" };
   }
   db.config.whitelistRoleId = (whitelistRoleId || "").trim();
   db.config.additionalRoleId = (additionalRoleId || "").trim();
   db.config.bypassRoleId = (bypassRoleId || "").trim();
+  db.config.staffChannelId = (staffChannelId || "").trim();
 
   writeDb(db);
   res.json({ ok: true });
