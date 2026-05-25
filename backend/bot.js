@@ -194,6 +194,14 @@ export async function approveUser(discordId, username, edition) {
           await member.roles.add(additionalRoleId);
           console.log(`[Bot] Successfully assigned additional role ${additionalRoleId} to user ${discordId}`);
         }
+
+        // Set their guild nickname to match their Minecraft username
+        try {
+          await member.setNickname(finalUsername);
+          console.log(`[Bot] Successfully updated guild nickname for ${discordId} to "${finalUsername}"`);
+        } catch (nickErr) {
+          console.warn(`[Bot] Could not set nickname for ${discordId} (likely hierarchy or server owner):`, nickErr.message);
+        }
       }
     } catch (err) {
       console.error(`[Bot] Error assigning roles to member ${discordId}:`, err);
