@@ -670,15 +670,15 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
               {searchTerm ? "No matching whitelisted players found in database." : "No players whitelisted in active database. Approve requests to build up this base."}
             </div>
           ) : (
-            <div className="overflow-x-auto w-full">
+            <div className="overflow-x-auto overflow-y-auto w-full max-h-[400px]">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-black/15 border-b border-white/5 text-[9px] font-bold text-gray-400 uppercase tracking-widest">
-                    <th className="p-4 pl-6">Minecraft Username</th>
-                    <th className="p-4">Platform</th>
-                    <th className="p-4">Discord ID & IP</th>
-                    <th className="p-4">Whitelisted At</th>
-                    <th className="p-4 pr-6 text-right">Actions</th>
+                  <tr className="sticky top-0 z-10 bg-[#1c1c1e] border-b border-white/5 text-[9px] font-bold text-gray-400 uppercase tracking-widest">
+                    <th className="p-4 pl-6 bg-[#1c1c1e]">Minecraft Username</th>
+                    <th className="p-4 bg-[#1c1c1e]">Platform</th>
+                    <th className="p-4 bg-[#1c1c1e]">Discord ID & IP</th>
+                    <th className="p-4 bg-[#1c1c1e]">Whitelisted At</th>
+                    <th className="p-4 pr-6 text-right bg-[#1c1c1e]">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/[0.03] text-xs font-medium">
@@ -748,15 +748,15 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
               No recent moderator decisions recorded in this session. Process requests in the queue above to populate this log.
             </div>
           ) : (
-            <div className="overflow-x-auto w-full">
+            <div className="overflow-x-auto overflow-y-auto w-full max-h-[320px]">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-black/15 border-b border-white/5 text-[9px] font-bold text-gray-400 uppercase tracking-widest">
-                    <th className="p-4 pl-6">Minecraft Username</th>
-                    <th className="p-4">Platform</th>
-                    <th className="p-4">Discord ID</th>
-                    <th className="p-4">Decision</th>
-                    <th className="p-4 pr-6 text-right">Processed At</th>
+                  <tr className="sticky top-0 z-10 bg-[#1c1c1e] border-b border-white/5 text-[9px] font-bold text-gray-400 uppercase tracking-widest">
+                    <th className="p-4 pl-6 bg-[#1c1c1e]">Minecraft Username</th>
+                    <th className="p-4 bg-[#1c1c1e]">Platform</th>
+                    <th className="p-4 bg-[#1c1c1e]">Discord ID</th>
+                    <th className="p-4 bg-[#1c1c1e]">Decision</th>
+                    <th className="p-4 pr-6 text-right bg-[#1c1c1e]">Processed At</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/[0.03] text-xs font-medium">
