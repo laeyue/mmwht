@@ -293,3 +293,48 @@ export async function revokeUser(discordId, username, edition) {
   }
 }
 
+// Deploy Welcome Button Embed Dynamically
+export async function deployWelcomeEmbed(channelId) {
+  try {
+    const channel = await client.channels.fetch(channelId);
+    if (!channel || !channel.isTextBased()) {
+      throw new Error("Specified channel is invalid or not text-based.");
+    }
+
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId("apply_whitelist")
+        .setLabel("Apply for Whitelist")
+        .setStyle(ButtonStyle.Success)
+        .setEmoji("📝")
+    );
+
+    const welcomeEmbed = new EmbedBuilder()
+      .setColor(0x58cc02)
+      .setTitle("🐱 Meowcraft Survival Gateway")
+      .setDescription(
+        "Welcome to the official **Meowcraft Whitelist Gateway**!\n\n" +
+        "To join our survival community, you must verify your account and register your Minecraft nickname using our automated portal.\n\n" +
+        "**How to register:**\n" +
+        "1️⃣ Click the **Apply for Whitelist** button below.\n" +
+        "2️⃣ Follow the temporary verification link sent ephemerally to your screen.\n" +
+        "3️⃣ Enter your Minecraft Username, select **Java** or **Bedrock**, and view connection details.\n\n" +
+        "⚡ *Our staff will manually review and approve your submission shortly after.*"
+      )
+      .setThumbnail("https://cdn.discordapp.com/icons/1361877511624982659/a_0b904d9c7ad6e6ee.png")
+      .setFooter({ text: "Meowcraft Gateway • Secure Verification" })
+      .setTimestamp();
+
+    await channel.send({
+      embeds: [welcomeEmbed],
+      components: [row],
+    });
+
+    console.log(`[Bot] Manually deployed welcome embed to channel: ${channelId}`);
+    return { ok: true };
+  } catch (err) {
+    console.error(`[Bot] Failed manual embed deployment to channel ${channelId}:`, err);
+    throw new Error(err.message || "Failed to deploy welcome embed.");
+  }
+}
+

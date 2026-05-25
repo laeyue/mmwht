@@ -196,6 +196,41 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
     loadQueue();
   }, []);
 
+  const [deployChannelId, setDeployChannelId] = useState("");
+  const [deploying, setDeploying] = useState(false);
+  const [deploySuccess, setDeploySuccess] = useState(false);
+  const [deployError, setDeployError] = useState<string | null>(null);
+
+  async function handleDeployEmbed(e: React.FormEvent) {
+    e.preventDefault();
+    if (!deployChannelId.trim()) return;
+
+    setDeploying(true);
+    setDeploySuccess(false);
+    setDeployError(null);
+
+    try {
+      const res = await fetch("/api/admin/deploy-button", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ channelId: deployChannelId.trim() }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.ok) {
+        setDeploySuccess(true);
+        setDeployChannelId("");
+        setTimeout(() => setDeploySuccess(false), 5000);
+      } else {
+        setDeployError(data.error || "Failed to deploy welcome embed.");
+      }
+    } catch {
+      setDeployError("Failed to connect to the server.");
+    } finally {
+      setDeploying(false);
+    }
+  }
+
   async function handleAction(id: string, action: "approve" | "reject") {
     // Optimistic slide out animation
     setRemoving((prev) => new Set(prev).add(id));
@@ -330,6 +365,50 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
               <X className="w-4.5 h-4.5" />
             </div>
           </div>
+        </div>
+
+        {/* Deploy Welcome Embed Card */}
+        <div className="modern-card p-6 flex flex-col gap-4 animate-fade-in-up">
+          <div>
+            <h3 className="text-xs font-bold text-white uppercase tracking-widest border-b border-white/5 pb-3 flex items-center gap-2">
+              <ShieldAlert className="w-4 h-4 text-indigo-400" />
+              Gateway Embed Manager
+            </h3>
+            <p className="text-[10px] text-gray-400 mt-2 leading-relaxed">
+              Manually deploy the official **Meowcraft Whitelist Gateway** application button embed to any Discord channel on your server.
+            </p>
+          </div>
+
+          <form onSubmit={handleDeployEmbed} className="flex gap-3 flex-wrap sm:flex-nowrap">
+            <input
+              type="text"
+              required
+              placeholder="Enter Discord Channel ID..."
+              value={deployChannelId}
+              onChange={(e) => setDeployChannelId(e.target.value.replace(/\s/g, ""))}
+              className="bg-black/35 border border-white/10 rounded-lg px-3 py-2 text-xs text-white flex-grow focus:outline-none focus:border-indigo-500/40"
+              disabled={deploying}
+            />
+            <button
+              type="submit"
+              disabled={deploying || !deployChannelId.trim()}
+              className="modern-pill bg-indigo-500/10 border-indigo-500/25 text-indigo-400 hover:bg-indigo-500 hover:text-white px-4 py-2 text-xs uppercase font-bold active:scale-95 transition-all cursor-pointer whitespace-nowrap disabled:opacity-50"
+            >
+              {deploying ? "Deploying..." : "Deploy Embed"}
+            </button>
+          </form>
+
+          {deploySuccess && (
+            <div className="p-3 text-center text-xs font-semibold text-emerald-400 bg-emerald-500/10 rounded-lg border border-emerald-500/20 animate-fade-in">
+              🎉 Whitelist Gateway button embed deployed successfully!
+            </div>
+          )}
+
+          {deployError && (
+            <div className="p-3 text-center text-xs font-semibold text-red-400 bg-red-500/10 rounded-lg border border-red-500/20 animate-fade-in">
+              ❌ {deployError}
+            </div>
+          )}
         </div>
 
         {/* Main queue card */}

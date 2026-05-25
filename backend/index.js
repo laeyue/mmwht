@@ -8,7 +8,7 @@ import crypto from "crypto";
 let activeAdminSession = null;
 
 import { pendingApplications, preAuthTokens } from "./state.js";
-import { initBot, approveUser, revokeUser } from "./bot.js";
+import { initBot, approveUser, revokeUser, deployWelcomeEmbed } from "./bot.js";
 import { readDb, writeDb } from "./database.js";
 
 // Load configuration
@@ -276,6 +276,22 @@ app.post("/api/admin/revoke", requireAdmin, async (req, res) => {
   });
 
   res.json({ ok: true });
+});
+
+// Deploy Whitelist Button Embed Dynamically to a specified channel
+app.post("/api/admin/deploy-button", requireAdmin, async (req, res) => {
+  const { channelId } = req.body;
+
+  if (!channelId) {
+    return res.status(400).json({ error: "Missing required channelId parameter." });
+  }
+
+  try {
+    await deployWelcomeEmbed(channelId);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message || "Failed to deploy welcome embed to channel." });
+  }
 });
 
 // Fallback all other client routing to SPA entry
