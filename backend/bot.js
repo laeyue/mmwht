@@ -82,41 +82,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
   const discordId = interaction.user.id;
 
-  // Whitelist single account protection check
-  if (interaction.guild) {
-    try {
-      const member = await interaction.guild.members.fetch(discordId).catch(() => null);
-      if (member) {
-        const db = readDb();
-        const dbConfig = db.config || {};
-        const whitelistRoleId = dbConfig.whitelistRoleId || process.env.WHITELIST_ROLE_ID;
-        const bypassRoleId = dbConfig.bypassRoleId || process.env.BYPASS_LIMITS_ROLE_ID;
-
-        const hasWhitelistRole = whitelistRoleId ? member.roles.cache.has(whitelistRoleId) : false;
-        const hasBypassRole = bypassRoleId ? member.roles.cache.has(bypassRoleId) : false;
-
-        if (hasWhitelistRole && !hasBypassRole) {
-          const limitEmbed = new EmbedBuilder()
-            .setColor(0xff3b30)
-            .setTitle("❌ Whitelist Limit Exceeded")
-            .setDescription(
-              `Your Discord account is already whitelisted on **Meowcraft**.\n\n` +
-              `To maintain a fair survival environment, each user is restricted to whitelisting exactly **one** Minecraft nickname.\n\n` +
-              `*If you need to update your registered username or transfer accounts, please contact our moderation team.*`
-            )
-            .setTimestamp();
-
-          return interaction.reply({
-            embeds: [limitEmbed],
-            ephemeral: true,
-          });
-        }
-      }
-    } catch (err) {
-      console.error("[Bot] Security role verification failed:", err);
-    }
-  }
-
   // Generate secure 32-character token
   const token = crypto.randomBytes(16).toString("hex");
 
@@ -337,7 +302,7 @@ export async function deployWelcomeEmbed(channelId) {
         "⚡ *Our staff will manually review and approve your submission shortly after.*"
       )
       .setThumbnail("https://cdn.discordapp.com/icons/1361877511624982659/a_0b904d9c7ad6e6ee.png")
-      .setFooter({ text: "Meowcraft Gateway • Secure Verification" })
+      .setFooter({ text: "im a stinky bot" })
       .setTimestamp();
 
     await channel.send({
